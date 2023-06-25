@@ -1,14 +1,14 @@
 import config
-import DS304.model.data_loader as data_loader
+from data.data_loader import load_data, split_data
 from model.ann_model import train_ann_model, make_ann_prediction
-from linear_model import train_linear_model, make_linear_prediction
+from model.linear_model import train_linear_model, make_linear_prediction
 
 def main():
     # Đọc dữ liệu từ file cấu hình
-    data = data_loader.load_data(config.data_file)
+    data = load_data(config.data_file)
 
     # Chia dữ liệu thành các cửa sổ với kích thước từ file cấu hình
-    windows = data_loader.split_data(data, config.window_size)
+    windows = split_data(data, config.window_size)
 
     # Kiểm tra và chạy mô hình ANN nếu được bật trong file cấu hình
     if config.run_ann_model:
