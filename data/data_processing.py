@@ -3,7 +3,7 @@ from sklearn.model_selection import train_test_split
 
 class DataProcessor:
     def __init__(self):
-        self.scaler = MinMaxScaler()
+        self.scaler = StandardScaler()
         
     def preprocess_data(self, data):
         y = data['T2M']
@@ -16,12 +16,12 @@ class DataProcessor:
         # Lọc và xóa các cột có mối tương quan thấp với cột T2M
         columns_to_drop = corr_with_T2M[corr_with_T2M < threshold].index
         X = data.drop(columns=['T2MDEW', 'T2MWET', 'TS', 'T2M_RANGE', 'T2M_MAX', 'T2M_MIN', 'T2M'])
-        X = X.drop(columns=columns_to_drop)
         # Chuẩn hóa dữ liệu về khoảng [0, 1] sử dụng MinMaxScaler
         scaled_data = self.scaler.fit_transform(X)
         return scaled_data, y
 
     def split_data(self, X, y):
         # Chia dữ liệu thành tập huấn luyện và tập kiểm tra
-        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, shuffle=False)
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2,shuffle=False)
+        # print(X_train)
         return X_train, y_train, X_test, y_test
