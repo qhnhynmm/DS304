@@ -1,38 +1,42 @@
 import config
-from data.data_loader import load_data, split_data
-from model.ann_model import train_ann_model, make_ann_prediction
-from model.linear_model import train_linear_model, make_linear_prediction
-
+from data.data_loader import load_data
+from data.data_processing import DataProcessor
+from model.ann import train_ann_model, make_ann_prediction
+from model.linear_regression import train_linear_model, make_linear_prediction
+from sklearn.metrics import classification_report
+from sklearn.metrics import mean_squared_error
+import numpy as np
 def main():
     # Đọc dữ liệu từ file cấu hình
     data = load_data(config.data_file)
+    data_processor = DataProcessor()
 
-    # Chia dữ liệu thành các cửa sổ với kích thước từ file cấu hình
-    windows = split_data(data, config.window_size)
+    # Sử dụng phương thức preprocess_data
+    preprocessed_data, y = data_processor.preprocess_data(data)
 
-    # Kiểm tra và chạy mô hình ANN nếu được bật trong file cấu hình
-    if config.run_ann_model:
-        ann_predictions = []
-        for window in windows:
-            ann_model = train_ann_model(window)
-            ann_prediction = make_ann_prediction(ann_model, window[-1])
-            ann_predictions.append(ann_prediction)
-        # Ghi kết quả vào file đầu ra nếu được cung cấp trong file cấu hình
-        if config.output_file:
-            predictions_df = pd.DataFrame({'ANN Prediction': ann_predictions})
-            predictions_df.to_csv(config.output_file, index=False)
+    # Sử dụng phương thức split_data
+    X_train, y_train, X_test, y_test = data_processor.split_data(preprocessed_data , y)
+
+    # # Kiểm tra và chạy mô hình ANN nếu được bật trong file cấu hình
+    # if config.run_ann_model:
+    #     ann_predictions = []
+    #     for window in windows:
+    #         ann_model = train_ann_model(window)
+    #         ann_prediction = make_ann_prediction(ann_model, window[-1])
+    #         ann_predictions.append(ann_prediction)
+    #     # Ghi kết quả vào file đầu ra nếu được cung cấp trong file cấu hình
+    #     if config.output_file:
+    #         predictions_df = pd.DataFrame({'ANN Prediction': ann_predictions})
+    #         predictions_df.to_csv(config.output_file, index=False)
 
     # Kiểm tra và chạy mô hình Linear Regression nếu được bật trong file cấu hình
-    if config.run_linear_model:
-        linear_predictions = []
-        for window in windows:
-            linear_model = train_linear_model(window)
-            linear_prediction = make_linear_prediction(linear_model, window[-1])
-            linear_predictions.append(linear_prediction)
-        # Ghi kết quả vào file đầu ra nếu được cung cấp trong file cấu hình
-        if config.output_file:
-            predictions_df = pd.DataFrame({'Linear Regression Prediction': linear_predictions})
-            predictions_df.to_csv(config.output_file, index=False)
-
+    if config.run_linear_model:  
+      linear_model = train_linear_model(X_train,y_train)
+      linear_prediction = make_linear_prediction(linear_model, X_test)
+      # Ghi kết quả vào file đầu ra nếu được cung cấp trong file cấu hình
+      if config.classify_report:
+        print('Linear_regression')
+        rmse = np.sqrt(mean_squared_error(y_test,linear_prediction))
+        print('RMSE:', rmse)
 if __name__ == "__main__":
     main()
