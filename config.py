@@ -1,4 +1,4 @@
 
-data_file = "data.csv"  # Tên file dữ liệu
-output_file = "predictions.csv"  # Tên file đầu ra
-window_size = 5  # Kích thước cửa sổ
+data_file = "/content/DS304/data/data.csv"  # Tên file dữ liệu
+run_linear_model = True
+main = True
