@@ -1,42 +1,63 @@
 import config
 from data.data_loader import load_data
 from data.data_processing import DataProcessor
-from model.ann import train_ann_model, make_ann_prediction
 from model.linear_regression import train_linear_model, make_linear_prediction
-from sklearn.metrics import classification_report
-from sklearn.metrics import mean_squared_error
+from model.ridge import train_ridge_model, make_ridge_prediction
+from model.lstm import train_lstm_model, make_lstm_prediction
+from model.cnn1d import train_cnn_model, make_cnn_prediction
+from evaluation.evaluation import calculate_metrics
 import numpy as np
 def main():
     # Đọc dữ liệu từ file cấu hình
     data = load_data(config.data_file)
     data_processor = DataProcessor()
+    if config.fill:
+      print('\nsử dụng data fill và ')
+      data = data_processor.fill(data)
+      if config.MinMaxScaler:
+        print('MinMaxScaler')
+        data = data_processor.min_max_scale(data)
+      if config.StandardScaler:
+        print('StandardScaler')
+        data = data_processor.standard_scale(data)
+    else:
+      print("\n sử dụng data gốc")
+    # chia data
+    X_train, y_train, X_test, y_test = data_processor.split_data(data)
 
-    # Sử dụng phương thức preprocess_data
-    preprocessed_data, y = data_processor.preprocess_data(data)
-
-    # Sử dụng phương thức split_data
-    X_train, y_train, X_test, y_test = data_processor.split_data(preprocessed_data , y)
-
-    # # Kiểm tra và chạy mô hình ANN nếu được bật trong file cấu hình
-    # if config.run_ann_model:
-    #     ann_predictions = []
-    #     for window in windows:
-    #         ann_model = train_ann_model(window)
-    #         ann_prediction = make_ann_prediction(ann_model, window[-1])
-    #         ann_predictions.append(ann_prediction)
-    #     # Ghi kết quả vào file đầu ra nếu được cung cấp trong file cấu hình
-    #     if config.output_file:
-    #         predictions_df = pd.DataFrame({'ANN Prediction': ann_predictions})
-    #         predictions_df.to_csv(config.output_file, index=False)
-
-    # Kiểm tra và chạy mô hình Linear Regression nếu được bật trong file cấu hình
+    #chạy mô hình Linear Regression nếu được bật trong file cấu hình
     if config.run_linear_model:  
       linear_model = train_linear_model(X_train,y_train)
-      linear_prediction = make_linear_prediction(linear_model, X_test)
-      # Ghi kết quả vào file đầu ra nếu được cung cấp trong file cấu hình
-      if config.classify_report:
-        print('Linear_regression')
-        rmse = np.sqrt(mean_squared_error(y_test,linear_prediction))
-        print('RMSE:', rmse)
+      y_pred_test = make_linear_prediction(linear_model, X_test)
+      y_pred_train = make_linear_prediction(linear_model, X_train)
+      print("\nlinear_regression")
+      calculate_metrics(y_train, y_pred_train, y_test, y_pred_test)
+      print('\n\n')
+    #chạy mô hình Ridge Regression nếu được bật trong file cấu hình
+    if config.run_ridge_model:  
+      ridge_model = train_ridge_model(X_train,y_train)
+      y_pred_test = make_ridge_prediction(ridge_model, X_test)
+      y_pred_train = make_ridge_prediction(ridge_model, X_train)
+      print("ridge_regression")
+      calculate_metrics(y_train, y_pred_train, y_test, y_pred_test)
+      print('\n\n')
+    #chạy mô hình lstm nếu được bật trong file cấu hình
+    if config.run_lstm_model:  
+      lstm_model, X_train_lstm, X_test_lstm = train_lstm_model(X_train,X_test,y_train)
+      y_pred_test = make_lstm_prediction(lstm_model, X_test_lstm)
+      y_pred_train = make_lstm_prediction(lstm_model,X_train_lstm)
+      print("\nlstm_regression")
+      calculate_metrics(y_train, y_pred_train, y_test, y_pred_test)
+      print('\n\n')
+    #chạy mô hình lstm nếu được bật trong file cấu hình
+    if config.run_cnn_model:  
+      cnn_model, X_train_cnn, X_test_cnn = train_cnn_model(X_train,X_test,y_train)
+      y_pred_test = make_cnn_prediction(cnn_model, X_test_cnn)
+      y_pred_train = make_cnn_prediction(cnn_model,X_train_cnn)
+      print("\ncnn1d_regression")
+      calculate_metrics(y_train, y_pred_train, y_test, y_pred_test)
+      print('\n\n')
+    
+    
 if __name__ == "__main__":
     main()
